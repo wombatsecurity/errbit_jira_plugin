@@ -46,6 +46,20 @@ module ErrbitJiraPlugin
       FIELDS
     end
 
+    def self.icons
+      @icons ||= {
+        create: [
+          'image/png', ErrbitJiraPlugin.read_static_file('jira_create.png')
+        ],
+        goto: [
+          'image/png', ErrbitJiraPlugin.read_static_file('jira_goto.png'),
+        ],
+        inactive: [
+          'image/png', ErrbitJiraPlugin.read_static_file('jira_inactive.png'),
+        ]
+      }
+    end
+
     def self.body_template
       @body_template ||= ERB.new(File.read(
         File.join(
@@ -86,10 +100,10 @@ module ErrbitJiraPlugin
         issue_title =  "[#{ problem.environment }][#{ problem.where }] #{problem.message.to_s.truncate(100)}".delete!("\n")
         issue_description = self.class.body_template.result(binding).unpack('C*').pack('U*')
         issue = {"fields"=>{"summary"=>issue_title, "description"=>issue_description,"project"=>{"key"=>params['project_id']},"issuetype"=>{"id"=>"3"},"priority"=>{"name"=>params['issue_priority']}}}
-        
+
         issue_build = client.Issue.build
         issue_build.save(issue)
-        
+
         problem.update_attributes(
           :issue_link => jira_url(issue_build.key),
           :issue_type => params['issue_type']
